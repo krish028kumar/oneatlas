@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lab {
+  id          Int     @id @default(autoincrement())
+  slug        String  @unique
+  name        String
+  country     String
+  description String
+  models      Model[]
+}
+
+model Provider {
+  id     Int             @id @default(autoincrement())
+  slug   String          @unique
+  name   String
+  website String
+  offers ModelProvider[]
+}
+
+model Model {
+  id            Int             @id @default(autoincrement())
+  slug          String          @unique
+  name          String
+  description   String
+  type          String
+  capabilities  String[]
+  contextWindow Int
+  inputPrice    Float
+  outputPrice   Float
+  releaseDate   DateTime
+  labId         Int
+  lab           Lab             @relation(fields: [labId], references: [id])
+  providers     ModelProvider[]
+  scores        Score[]
+
+  @@index([labId])
+  @@index([type])
+}
+
+model ModelProvider {
+  modelId     Int
+  providerId  Int
+  inputPrice  Float
+  outputPrice Float
+  model       Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  provider    Provider @relation(fields: [providerId], references: [id])
+
+  @@id([modelId, providerId])
+}
+
+model Benchmark {
+  id       Int     @id @default(autoincrement())
+  name     String  @unique
+  category String
+  scores   Score[]
+}
+
+model Score {
+  modelId     Int
+  benchmarkId Int
+  value       Float
+  model       Model     @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  benchmark   Benchmark @relation(fields: [benchmarkId], references: [id])
+
+  @@id([modelId, benchmarkId])
+}
